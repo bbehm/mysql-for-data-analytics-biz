@@ -27,11 +27,11 @@ LEFT JOIN customers ON payments.customerNumber=customers.customerNumber;
 
 /*
 ** From that table we can count the amount of payments done during weekdays and
-** select the top two
+** select the top two. Note that weekday() function starts from monday=0.
 */
 
 SELECT customerNumber, customerName, COUNT(*) FROM output_table
-WHERE weekday(paymentDate) regexp '6|7'
+WHERE weekday(paymentDate) regexp '5|6'
 GROUP BY customerNumber, customerName
 ORDER BY COUNT(*) DESC LIMIT 0,2;
 
@@ -102,3 +102,61 @@ FROM final
 WHERE company_response = 'Closed with relief' AND total_amount > 30
 ORDER BY ratio DESC;
 
+/*
+** Exercise 5
+** Find the company with most issues on Wednesdays regarding loans in a
+** state starting with 'A'.
+*/
+
+SELECT company, COUNT(*)
+FROM cfpb_complaints_2500
+WHERE issue LIKE '%loan%' and weekday(Data_received) = 2 and State LIKE 'A%'
+GROUP BY company
+ORDER BY COUNT(*) DESC;
+
+/*
+** Exercise 6
+** Calculating mean statusquo for females who voted for  Pinochet from
+** different income levels.
+*/
+
+/* First we add new column with income level */
+
+ALTER table chile
+ADD income_level VARCHAR(15);
+
+UPDATE chile
+SET income_level =
+CASE
+WHEN chile.income < 10000 then "low_income"
+WHEN chile.income > 100000 then "high_income"
+ELSE "middle_income"
+END;
+
+/* Then we create a view with only females who voted yes */
+
+CREATE VIEW info AS
+SELECT income_level, statusquo
+FROM chile
+WHERE sex = 'F' and vote = 'Y'
+GROUP BY income_level, statusquo
+ORDER BY income_level;
+
+/* Finally calculating average for each income level */
+
+SELECT income_level, ROUND(AVG(statusquo), 3) AS mean_statusquo
+FROM info
+GROUP BY income_level
+ORDER BY mean_statusquo DESC;
+
+/*
+** Exercise 7
+*/
+
+SELECT company, COUNT(*) as frequency
+FROM cfpb_complaints_2500
+WHERE Consumer_disputed = 'Yes'
+AND weekday(Data_received) = 4
+AND DATEDIFF(Data_sent_to_company, Data_received) > 5
+GROUP BY company
+ORDER BY frequency DESC;
