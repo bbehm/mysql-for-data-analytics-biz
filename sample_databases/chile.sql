@@ -1,5 +1,4 @@
 
-
 CREATE TABLE IF NOT EXISTS `chile` (
   `ID` int(11) DEFAULT NULL,
   `region` char(2) DEFAULT NULL,
